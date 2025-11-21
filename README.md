@@ -22,26 +22,75 @@ A cross‑platform (Android, iOS, Web) multi‑layer authentication demo built w
 BiometricExpoDemo implements a progressive, multi‑factor flow where users must complete all enabled authentication layers before accessing a mock “Secure Vault.” On web, native biometrics are unavailable; the app adapts by enabling custom methods (PIN/Password/Face) and skipping system biometric.
 
 ## Feature Matrix
-- System Biometric (native only): fingerprint / Face ID / device passcode using `expo-local-authentication`.
-- Custom PIN: 4+ digits, setup + validation.
-- Custom Password: 6+ chars, setup + validation.
-- Face Recognition (demo): camera capture + simple matching placeholder. Native uses `expo-camera`; Web uses MediaStream + Canvas.
-- Multi‑factor orchestration: user must complete all enabled layers.
-- Platform adaptation: conditional imports and behaviors for Web vs Native.
-- UI/UX: dark theme, clear statuses, modals for setup/auth, success/failure feedback, progress indicators.
+
+### Authentication Methods
+- **System Biometric (native only)**: fingerprint / Face ID / device passcode using `expo-local-authentication`
+- **Custom PIN**: 4+ digits with setup + validation, secure input masking
+- **Custom Password**: 6+ characters with setup + validation, alphanumeric requirements
+- **Face Recognition (demo)**: camera capture + simple matching placeholder. Native uses `expo-camera`; Web uses MediaStream + Canvas
+- **Multi-factor orchestration**: user must complete all enabled layers in sequence
+- **Platform adaptation**: conditional imports and behaviors for Web vs Native
+
+### User Experience Features
+- **Dark theme UI**: Professional dark color scheme (#1a1a2e) with color-coded status indicators
+- **Progress tracking**: Real-time authentication completion status with visual feedback
+- **Modal-driven workflows**: Clean setup and authentication modals with keyboard handling
+- **Responsive design**: Adaptive layouts for various screen sizes and orientations
+- **Emoji indicators**: Intuitive visual icons for different authentication states
+- **Error handling**: Comprehensive error messages with recovery options
+- **Success feedback**: Clear achievement notifications and confirmations
+
+### Technical Implementation Features
+- **TypeScript strict mode**: Type-safe development with comprehensive error checking
+- **Functional components**: Modern React hooks-based architecture
+- **Memory management**: Proper stream cleanup and resource management
+- **Performance optimizations**: Lazy loading, conditional imports, ref management
+- **Component modularization**: Reusable modal and screen components
+- **State persistence**: Authentication state management across screen transitions
+
+### Platform-Specific Capabilities
+- **Native biometric detection**: Automatic identification of device capabilities
+- **Web camera integration**: MediaStream API with Canvas processing for face capture
+- **Permission management**: Dynamic camera and biometric permission requests
+- **Fallback mechanisms**: Intelligent degradation when features are unavailable
+- **Cross-platform deployment**: Single codebase for Android, iOS, and Web
 
 ## Architecture
-- React Native (functional components + hooks).
-- Expo SDK 54, RN 0.81.x, TypeScript strict.
-- Conditional module loading for web safety (require at runtime only on native):
-  - `expo-local-authentication`
-  - `expo-camera` (Camera, CameraView)
-- State buckets:
-  - `currentScreen`: 'lock' | 'setup' | 'auth' | 'vault'
-  - `enabledMethods`: which factors are on
-  - `userCredentials`: pin/password/faceData (base64)
-  - `completedMethods`: per‑factor completion flags
-  - camera/permission states and web video/canvas refs
+
+### Core Technologies
+- **React Native (functional components + hooks)**: Modern React patterns with useState, useEffect, useRef
+- **Expo SDK 54**: Latest stable version with comprehensive feature set
+- **React Native 0.81.x**: Native UI components and platform APIs
+- **TypeScript strict mode**: Enhanced type safety and error prevention
+
+### Cross-Platform Module Loading
+- **Safe conditional imports**: Platform-specific modules loaded at runtime only on native platforms
+  - `expo-local-authentication`: Biometric hardware integration
+  - `expo-camera` (Camera, CameraView): Camera access and control
+  - `expo-face-detector`: Facial recognition capabilities (imported but not actively used)
+  - `expo-media-library`: Media storage and management
+  - `expo-status-bar`: System UI customization
+
+### State Management Architecture
+- **`currentScreen`**: 'lock' | 'setup' | 'auth' | 'vault' - Navigation state management
+- **`enabledMethods`**: Configuration object for active authentication factors
+- **`userCredentials`**: Secure storage object (demo implementation)
+  - `pin`: Numeric PIN code
+  - `password`: Alphanumeric password
+  - `faceData`: Base64 encoded facial image data
+- **`completedMethods`**: Progress tracking for each authentication factor
+- **Camera state management**: 
+  - `hasPermission`: Camera permission status
+  - `capturedImage`: Recently captured face image
+  - `webStream`: Web video stream (MediaStream instance)
+  - `isWebCameraActive`: Web camera active status
+  - `cameraRef`, `webVideoRef`, `webCanvasRef`: DOM element references
+
+### Component Structure
+- **Main App Component**: Central authentication logic and screen routing
+- **Modal System**: Dynamic modals for setup and authentication workflows
+- **Screen Components**: Separate logical screens (Lock, Setup, Auth, Vault)
+- **Platform Adaptation Layer**: Web vs Native behavior switching
 
 ## Workflow (End‑to‑End)
 1) Lock Screen
@@ -186,20 +235,134 @@ BiometricExpoDemo/
 └─ README.md                # This file
 ```
 
-## Setup & Run
-- Prereqs: Node LTS, Expo CLI (`npm i -g expo`)
-- Install deps: `npm install`
-- Start:
-  - General: `npm run start`
-  - Android: `npm run android`
-  - iOS: `npm run ios`
-  - Web: `npm run web`
+## Configuration Reference
 
-## Troubleshooting
-- Web camera blocked → enable browser camera permission.
-- Native camera denied → OS Settings > App > Camera permission.
-- Biometric not available → ensure device has biometrics enrolled or fall back to PIN/Password.
-- Metro cache issues → stop server, clear cache: `expo start -c`.
+### app.json (Expo)
+- `name`, `slug`, `version`: App identity
+- `icon`, `splash`: Branding assets
+- `android.adaptiveIcon`: Foreground/background color
+- `android.edgeToEdgeEnabled`: Immersive UI
+- `android.predictiveBackGestureEnabled`: Navigation control
+- `ios.supportsTablet`: iPad support
+- `web.favicon`: Web icon
+
+### package.json (Scripts)
+- `start`: Launch Expo dev server
+- `android` / `ios` / `web`: Platform shortcuts
+
+## API Surface (Internal)
+
+### Screens
+- `lock` → `setup` → `auth` → `vault` (via `currentScreen`)
+
+### Methods
+- `performSystemAuth()` → Native biometric prompt / web fallback
+- `toggleAuthMethod(method)` → Enable/disable and open setup
+- `setupPin()` / `setupPassword()` / `setupFaceRecognition()` → Configure factors
+- `captureFaceImage()` / `captureWebImage()` → Enrollment capture
+- `authenticateWithMethod('pin'|'password'|'face')` → Open auth modal
+- `validatePin()` / `validatePassword()` / `validateFace()` → Verify inputs
+- `checkAuthCompletion()` → Gatekeeper for vault access
+- `closeModals()` → Reset modal/UI state
+
+### State Contracts
+- `enabledMethods`: { systemBiometric, customPin, customPassword, customFace }
+- `completedMethods`: mirrors enabled keys with booleans
+- `userCredentials`: { pin, password, faceData }
+
+## Contribution Guide
+- Fork and create a feature branch: `git checkout -b feat/your-feature`
+- Run locally on all platforms you can (web + at least one mobile)
+- Add tests where possible; keep styles and UX consistent
+- Submit PR with a clear description and screenshots/GIFs
+
+## Setup & Development
+
+### Prerequisites
+- **Node.js**: Latest LTS version recommended
+- **Expo CLI**: `npm i -g expo`
+- **Mobile Development**: Expo Go app (for testing) or physical device
+- **Web Development**: Modern browser with camera support (Chrome, Firefox, Safari)
+
+### Installation
+```bash
+# Clone or navigate to project directory
+cd BiometricExpoDemo
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run start
+```
+
+### Platform-Specific Running
+- **General Development**: `npm run start` (opens Expo developer tools)
+- **Android**: `npm run android` (requires Android Studio/SDK)
+- **iOS**: `npm run ios` (requires Xcode on macOS)
+- **Web**: `npm run web` (opens browser with development server)
+
+### Development Tools
+- **Expo Developer Tools**: Real-time device preview and debugging
+- **Metro Bundler**: JavaScript bundling with hot reload
+- **React Native Debugger**: Network/React component inspection
+- **Browser DevTools**: Web platform debugging and performance profiling
+
+## Detailed Troubleshooting
+
+### Common Issues and Solutions
+
+#### Web Platform Issues
+- **Camera Access Blocked**:
+  - Enable browser camera permissions in site settings
+  - Use HTTPS (required for MediaStream API in most browsers)
+  - Restart browser after permission changes
+
+#### Native Platform Issues
+- **Camera Permission Denied**:
+  - Navigate to Settings > Apps > BiometricExpoDemo > Permissions > Camera
+  - Toggle camera permission and restart app
+  - Some Android versions may need Settings > Apps > Special app access > Camera access
+
+#### Biometric Authentication Problems
+- **Device Biometrics Not Recognized**:
+  - Ensure fingerprint/Face ID is enrolled in device settings
+  - Check device settings for biometric availability
+  - Fallback to PIN/Password authentication methods
+
+#### Development Environment Issues
+- **Metro Cache Problems**:
+  ```bash
+  expo start -c  # Clear cache and restart
+  npm start -- --reset-cache  # Alternative cache reset
+  ```
+- **Module Resolution Errors**:
+  - Delete node_modules and reinstall: `rm -rf node_modules && npm install`
+  - Check Expo CLI version compatibility
+  - Verify TypeScript configuration
+
+#### Performance Issues
+- **Slow Camera Initialization**:
+  - Web: Check browser console for MediaStream errors
+  - Native: Verify camera hardware acceleration
+  - Restart development server after long sessions
+
+### Platform-Specific Limitations
+
+#### Web Browser Compatibility
+- **Safari**: May have stricter camera permission requirements
+- **Firefox**: Different MediaStream API implementation considerations
+- **Mobile Browsers**: Limited camera resolution and quality options
+
+#### Native Device Considerations
+- **Android**: Camera permission model varies by Android version
+- **iOS**: More restrictive biometric authentication flows
+- **Older Devices**: May lack sufficient camera resolution or biometric hardware
+
+### Debug Mode Enhancements
+- **Development Flags**: Enable detailed logging during development
+- **Error Boundaries**: Graceful error handling for unexpected failures
+- **Network Inspection**: Monitor API calls and data flow in development
 
 ## Roadmap / Production Hardening
 - Replace face demo with embeddings + liveness (TensorFlow.js or native MLKit).
@@ -207,6 +370,19 @@ BiometricExpoDemo/
 - Server‑issued tokens + refresh flow; audit logs and anomaly detection.
 - Rate limiting, lockout, alerts; SOC/monitoring hooks.
 - E2E tests per platform; accessibility & localization.
+- Threat modeling and STRIDE analysis; DFDs for data movement
+- Accessibility (WCAG 2.1 AA), localization/i18n
+- CI/CD with lint, typecheck, tests, bundle size budgets
+
+## Security Best Practices Checklist
+- [ ] Store secrets in platform-secure storage only (Keychain/Keystore); never in Redux/state
+- [ ] Hash PIN/password with Argon2/bcrypt/scrypt + per-user salt
+- [ ] Implement exponential backoff and account lockout on repeated failures
+- [ ] Use TLS everywhere; CSP and secure headers on web
+- [ ] Add liveness detection for face to prevent spoofing (blink/motion/3D cues)
+- [ ] Use ephemeral tokens with short TTL; rotate refresh tokens; bind to device
+- [ ] Maintain audits (who/when/where), monitor anomalies
+- [ ] Red-team/pentest regularly; dependency vulnerability scanning
 
 ---
 
